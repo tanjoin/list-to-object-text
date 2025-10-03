@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>文字列変換ツール</title>
+    <title>文字列変換ツール (リアルタイム)</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -27,91 +27,135 @@
             box-sizing: border-box;
             resize: vertical;
         }
-        button {
-            padding: 10px 20px;
-            background-color: #007bff;
+        .output-container {
+            position: relative;
+            margin-top: 15px;
+        }
+        .copy-button {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            padding: 5px 10px;
+            background-color: #28a745;
             color: white;
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 14px;
+            transition: background-color 0.3s;
         }
-        button:hover {
-            background-color: #0056b3;
+        .copy-button:hover {
+            background-color: #1e7e34;
         }
         pre {
             background-color: #e9ecef;
             padding: 15px;
+            padding-top: 40px; /* コピーボタンのスペースを確保 */
             border-radius: 4px;
             white-space: pre-wrap;
             word-wrap: break-word;
+            min-height: 100px;
+            border: 1px solid #dee2e6;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>文字列変換ツール</h1>
-        <p>「"ここに何かしら", // コメント」の形式のテキストを入力し、「変換」ボタンを押してください。</p>
+        <h1>文字列リアルタイム変換ツール ⚡</h1>
+        <p>「"ここに何かしら", // コメント」の形式のテキストを**入力または貼り付け**てください。結果が即座に表示されます。</p>
 
         <label for="input-text">入力:</label>
-        <textarea id="input-text" rows="10" placeholder='"値", // キー' の形式で入力してください。></textarea>
+        <textarea 
+            id="input-text" 
+            rows="10" 
+            placeholder='"値", // キー' 
+            oninput="convertText()"
+        ></textarea>
 
-        <button onclick="convertText()">変換</button>
-        
         <hr>
 
-        <label for="output-text">結果:</label>
-        <pre id="output-text">変換結果がここに表示されます。</pre>
+        <label>結果:</label>
+        <div class="output-container">
+            <button class="copy-button" onclick="copyResult()">コピー</button>
+            <pre id="output-text">変換結果がここに表示されます。</pre>
+        </div>
     </div>
 
     <script>
         /**
-         * 入力テキストエリアの内容を変換し、結果エリアに表示します。
+         * リアルタイム変換：入力された内容を変換し、結果エリアに表示します。
          */
         function convertText() {
             const inputTextarea = document.getElementById('input-text');
             const outputPre = document.getElementById('output-text');
-            const inputLines = inputTextarea.value.trim().split('\n');
+            const inputLines = inputTextarea.value.split('\n');
             let outputLines = [];
 
             // 各行を処理
             for (const line of inputLines) {
                 const trimmedLine = line.trim();
                 
-                // 空行はスキップ
+                // 空行はそのまま出力
                 if (!trimmedLine) {
                     outputLines.push('');
                     continue;
                 }
 
                 // 正規表現を使用して変換を実行
-                // 正規表現の説明:
-                // ^\s* -> 行頭のスペースを無視
-                // "([^"]*)"     -> ダブルクォートで囲まれた値（グループ1: $1 - 何かしらの部分）をキャプチャ
-                // \s*,\s* -> 値の後のスペース、カンマ、スペースを無視
-                // \/\/          -> コメント開始を示す "//"
-                // \s* -> コメント記号の後のスペースを無視
-                // ([^\r\n]*)    -> コメントテキスト（グループ2: $2 - コメント部分）をキャプチャ
-                // \s*$          -> 行末のスペースを無視
+                // 正規表現: ^\s*"([^"]*)"\s*,\s*\/\/\s*([^\r\n]*)\s*$
+                // グループ1: 値 ([^"]*)
+                // グループ2: コメント ([^\r\n]*)
                 const regex = /^\s*"([^"]*)"\s*,\s*\/\/\s*([^\r\n]*)\s*$/;
                 const match = trimmedLine.match(regex);
 
                 if (match) {
-                    const value = match[1].trim(); // グループ1: 何かしらの部分
-                    const comment = match[2].trim(); // グループ2: コメント部分
+                    // $1: 値, $2: コメント
+                    const value = match[1]; 
+                    const comment = match[2].trim(); 
 
-                    // 変換後の形式: "コメント": "何かしら"
+                    // 変換後の形式: "コメント": "値",
                     const converted = `"${comment}": "${value}",`;
                     outputLines.push(converted);
                 } else {
-                    // 形式が一致しない行はそのまま出力（またはエラー表示）
-                    outputLines.push(`// 変換失敗: ${line.trim()}`);
+                    // 形式が一致しない行はコメントアウトして出力
+                    outputLines.push(`// [変換スキップ] ${line}`);
                 }
             }
 
             // 結果を表示
             outputPre.textContent = outputLines.join('\n');
         }
+
+        /**
+         * コピーボタンの処理：結果エリアの内容をクリップボードにコピーします。
+         */
+        function copyResult() {
+            const outputPre = document.getElementById('output-text');
+            const textToCopy = outputPre.textContent;
+            
+            // クリップボードAPIを使用してテキストをコピー
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                // コピー成功時のフィードバック
+                const button = document.querySelector('.copy-button');
+                const originalText = button.textContent;
+                
+                button.textContent = 'コピー完了！';
+                button.style.backgroundColor = '#007bff'; // 色を変更してフィードバック
+                
+                // 3秒後に元の状態に戻す
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.style.backgroundColor = '#28a745';
+                }, 1500);
+            }).catch(err => {
+                // コピー失敗時のエラー処理
+                console.error('コピーに失敗しました: ', err);
+                alert('コピーに失敗しました。ブラウザがクリップボードAPIをサポートしていない可能性があります。');
+            });
+        }
+
+        // ページロード時に一度変換を実行し、初期のプレースホルダーを更新
+        window.onload = convertText;
     </script>
 </body>
 </html>
