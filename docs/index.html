@@ -117,7 +117,7 @@
                     // $1: 値, $2: コメント
                     const value = match[1]; 
                     const comment = match[2].trim();
-                    const blank = document.getElementById('insert-blank-switch').value ? "  " : "";
+                    const blank = document.getElementById('insert-blank-switch').checked ? "  " : "";
 
                     // 変換後の形式: "コメント": "値",
                     const converted = `${blank}"${comment}": "${value}",`;
