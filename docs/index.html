@@ -112,19 +112,19 @@
                 // グループ2: コメント ([^\r\n]*)
                 const regex = /^\s*"([^"]*)"\s*,\s*\/\/\s*([^\r\n]*)\s*$/;
                 const match = trimmedLine.match(regex);
+                const blank = document.getElementById('insert-blank-switch').checked ? "  " : "";
 
                 if (match) {
                     // $1: 値, $2: コメント
                     const value = match[1]; 
                     const comment = match[2].trim();
-                    const blank = document.getElementById('insert-blank-switch').checked ? "  " : "";
 
                     // 変換後の形式: "コメント": "値",
                     const converted = `${blank}"${comment}": "${value}",`;
                     outputLines.push(converted);
                 } else {
                     // 形式が一致しない行はコメントアウトして出力
-                    outputLines.push(`// [変換スキップ] ${line}`);
+                    outputLines.push(`${blank}${line}`);
                 }
             }
 
