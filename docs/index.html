@@ -97,7 +97,6 @@
                 
                 // 空行はそのまま出力
                 if (!trimmedLine) {
-                    outputLines.push('');
                     continue;
                 }
 
@@ -114,7 +113,7 @@
                     const comment = match[2].trim(); 
 
                     // 変換後の形式: "コメント": "値",
-                    const converted = `"${comment}": "${value}",`;
+                    const converted = `  "${comment}": "${value}",`;
                     outputLines.push(converted);
                 } else {
                     // 形式が一致しない行はコメントアウトして出力
