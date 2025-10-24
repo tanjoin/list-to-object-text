@@ -63,6 +63,7 @@
     <div class="container">
         <h1>文字列リアルタイム変換ツール ⚡</h1>
         <p>「"ここに何かしら", // コメント」の形式のテキストを**入力または貼り付け**てください。結果が即座に表示されます。</p>
+        <p><input type="checkbox" id="insert-blank-switch"><label>先頭に空白を追加</label></p>
 
         <label for="input-text">入力:</label>
         <textarea 
@@ -110,10 +111,11 @@
                 if (match) {
                     // $1: 値, $2: コメント
                     const value = match[1]; 
-                    const comment = match[2].trim(); 
+                    const comment = match[2].trim();
+                    const blank = document.getElementById('insert-blank-switch').value ? "  " : "";
 
                     // 変換後の形式: "コメント": "値",
-                    const converted = `  "${comment}": "${value}",`;
+                    const converted = `${blank}"${comment}": "${value}",`;
                     outputLines.push(converted);
                 } else {
                     // 形式が一致しない行はコメントアウトして出力
